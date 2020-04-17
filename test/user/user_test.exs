@@ -5,7 +5,6 @@ defmodule Encryption.UserTest do
   @valid_attrs %{
     name: "Max",
     email: "max@example.com", # Encryption.AES.encrypt(
-    key_id: 1,
     password: "NoCarbsBeforeMarbs" # Encryption.HashField.hash("NoCarbsBeforeMarbs")
   }
   @invalid_attrs %{}
@@ -28,7 +27,10 @@ defmodule Encryption.UserTest do
   end
 
   test "inserting a user sets the :email_hash field" do
-    user = Repo.insert! User.changeset(%User{}, @valid_attrs)
+    # Repo.insert! returns original struct, which is not the same as what's
+    # saved in the database
+    _user = Repo.insert! User.changeset(%User{}, @valid_attrs)
+    user = User.one()
     assert user.email_hash == Encryption.HashField.hash(@valid_attrs.email)
   end
 
@@ -61,9 +63,8 @@ defmodule Encryption.UserTest do
   test "can query on email_hash field because sha256 is deterministic" do
     Repo.insert! User.changeset(%User{}, @valid_attrs)
 
-    assert %User{} = Repo.get_by(User,
-      email_hash: Encryption.HashField.hash(@valid_attrs.email))
+    assert %User{} = Repo.get_by(User, email_hash: @valid_attrs.email)
     assert %User{} = Repo.one(from u in User,
-      where: u.email_hash == ^Encryption.HashField.hash(@valid_attrs.email))
+      where: u.email_hash == ^(@valid_attrs.email))
   end
 end

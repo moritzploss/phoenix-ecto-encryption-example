@@ -20,11 +20,6 @@ defmodule Encryption.EncryptedField do
     {:ok, AES.decrypt(value)}
   end
 
-  # load/2 is called with a specific key_id when the field is loaded from DB
-  def load(value, key_id) do
-    {:ok, AES.decrypt(value, key_id)}
-  end
-
   # embed_as/1 dictates how the type behaves when embedded (:self or :dump)
   def embed_as(_), do: :self # preserve the type's higher level representation
 

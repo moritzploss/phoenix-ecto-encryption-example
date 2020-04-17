@@ -19,8 +19,6 @@ defmodule Encryption.EncryptedFieldTest do
 
   test ".load decrypts a value" do
     {:ok, ciphertext} = Field.dump("hello")
-    keys = Application.get_env(:encryption, Encryption.AES)[:keys]
-    key_id = Enum.count(keys) - 1
-    assert {:ok, "hello"} == Field.load(ciphertext, key_id)
+    assert {:ok, "hello"} == Field.load(ciphertext)
   end
 end
