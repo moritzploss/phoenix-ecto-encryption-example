@@ -28,16 +28,8 @@ defmodule Encryption.AES do
   @spec encrypt(any) :: String.t
   def encrypt(plaintext) do
     iv = :crypto.strong_rand_bytes(16) # create random Initialisation Vector
-    key = get_key()    # get the *latest* key in the list of encryption keys
-    {ciphertext, tag} =
-      :crypto.block_encrypt(:aes_gcm, key, iv, {@aad, to_string(plaintext), 16})
-    iv <> tag <> ciphertext # "return" iv with the cipher tag & ciphertext
-  end
-
-  @spec encrypt(any, number) :: {String.t, number}
-  def encrypt(plaintext, key_id) do
-    iv = :crypto.strong_rand_bytes(16) # create random Initialisation Vector
-    key = get_key(key_id) # get *specific* key (by id) from list of keys.
+    id = latest_key_id()
+    key = get_key(id)    # get the *latest* key in the list of encryption keys
     {ciphertext, tag} =
       :crypto.block_encrypt(:aes_gcm, key, iv, {@aad, to_string(plaintext), 16})
     iv <> tag <> ciphertext # "return" iv with the cipher tag & ciphertext
@@ -53,14 +45,6 @@ defmodule Encryption.AES do
       iex> Encryption.AES.encrypt("test") |> Encryption.AES.decrypt(1)
       "test"
   """
-  @spec decrypt(String.t, number) :: {String.t, number}
-  def decrypt(ciphertext, key_id) do # patern match on binary to split parts:
-    <<iv::binary-16, tag::binary-16, ciphertext::binary>> = ciphertext
-    key = get_key(key_id) # get encrytion/decryption key based on key_id
-    :crypto.block_decrypt(:aes_gcm, key, iv, {@aad, ciphertext, tag})
-  end
-
-  # as above but *asumes* `default` (latest) encryption key is used.
   @spec decrypt(any) :: String.t
   def decrypt(ciphertext) do
     <<iv::binary-16, tag::binary-16, ciphertext::binary>> = ciphertext
@@ -69,19 +53,15 @@ defmodule Encryption.AES do
 
   # @doc """
   # get_key - Get encryption key from list of keys.
-  # if `key_id` is *not* supplied as argument,
-  # then the default *latest* encryption key will be returned.
   # ## Parameters
   # - `key_id`: the index of AES encryption key used to encrypt the ciphertext
   # ## Example
   #     iex> Encryption.AES.get_key
   #     <<13, 217, 61, 143, 87, 215, 35, 162, 183, 151, 179, 205, 37, 148>>
   # """ # doc commented out because https://stackoverflow.com/q/45171024/1148249
-  @spec get_key() :: String
-  defp get_key do
+  defp latest_key_id do
     keys = Application.get_env(:encryption, Encryption.AES)[:keys]
-    count = Enum.count(keys) - 1
-    get_key(count)
+    Enum.count(keys) - 1
   end
 
   @spec get_key(number) :: String

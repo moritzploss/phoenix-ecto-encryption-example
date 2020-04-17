@@ -8,7 +8,6 @@ defmodule Encryption.User do
     field(:email_hash, HashField)
     # :binary
     field(:email, EncryptedField)
-    field(:key_id, :integer)
     # :binary
     field(:name, EncryptedField)
     # virtual means "don't persist"
