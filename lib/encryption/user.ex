@@ -26,7 +26,7 @@ defmodule Encryption.User do
     # hash and/or encrypt the personal data before db insert!
     #  only after the email has been hashed!
     user
-    |> cast(attrs, [:name, :email])
+    |> cast(attrs, [:name, :email, :password])
     |> validate_required([:name, :email])
     |> set_hashed_fields([:email, :password])
     |> unique_constraint(:email_hash)

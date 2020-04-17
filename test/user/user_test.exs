@@ -34,6 +34,13 @@ defmodule Encryption.UserTest do
     assert user.email_hash == Encryption.HashField.hash(@valid_attrs.email)
   end
 
+  test "inserting a user sets the :password_hash field" do
+    Repo.insert! User.changeset(%User{}, @valid_attrs)
+    user = User.one()
+    assert Map.has_key?(user, :password_hash)
+    assert user.password_hash !== nil
+  end
+
   test "changeset validates uniqueness of email through email_hash" do
     Repo.insert! User.changeset(%User{}, @valid_attrs) # first insert works.
     # Now attempt to insert the *same* user again:
@@ -63,7 +70,7 @@ defmodule Encryption.UserTest do
   test "can query on email_hash field because sha256 is deterministic" do
     Repo.insert! User.changeset(%User{}, @valid_attrs)
 
-    assert %User{} = Repo.get_by(User, email_hash: @valid_attrs.email)
+    assert user = %User{} = Repo.get_by(User, email_hash: @valid_attrs.email)
     assert %User{} = Repo.one(from u in User,
       where: u.email_hash == ^(@valid_attrs.email))
   end
